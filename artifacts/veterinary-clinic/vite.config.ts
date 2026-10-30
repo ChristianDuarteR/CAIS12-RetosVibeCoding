@@ -5,7 +5,8 @@ import { defineConfig } from 'vite';
 
 import runtimeErrorOverlay from '@replit/vite-plugin-runtime-error-modal';
 
-const rawPort = process.env.PORT;
+const isReplit = process.env.REPL_ID !== undefined;
+const rawPort = process.env.PORT ?? (isReplit ? undefined : '5173');
 
 if (!rawPort) {
   throw new Error(
@@ -19,7 +20,7 @@ if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
-const basePath = process.env.BASE_PATH;
+const basePath = process.env.BASE_PATH ?? (isReplit ? undefined : '/');
 
 if (!basePath) {
   throw new Error(
@@ -69,6 +70,17 @@ export default defineConfig({
     strictPort: true,
     host: '0.0.0.0',
     allowedHosts: true,
+    ...(isReplit
+      ? {}
+      : {
+          proxy: {
+            '/api': {
+              target:
+                process.env.LOCAL_API_ORIGIN ?? 'http://127.0.0.1:5000',
+              changeOrigin: true,
+            },
+          },
+        }),
     fs: {
       strict: true,
     },

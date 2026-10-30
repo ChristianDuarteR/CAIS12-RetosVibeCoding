@@ -1,7 +1,8 @@
 import app from "./app";
 import { logger } from "./lib/logger";
 
-const rawPort = process.env["PORT"];
+const isReplit = process.env["REPL_ID"] !== undefined;
+const rawPort = process.env["PORT"] ?? (isReplit ? undefined : "5000");
 
 if (!rawPort) {
   throw new Error(

@@ -40,7 +40,7 @@ README.md
 - Node.js 24 o compatible con `node:sqlite`.
 - pnpm.
 
-## Instalación y ejecución
+## Instalación y ejecución local
 
 Instala las dependencias desde la raíz del proyecto:
 
@@ -48,17 +48,21 @@ Instala las dependencias desde la raíz del proyecto:
 pnpm install
 ```
 
-Inicia la API y la interfaz en terminales separadas:
+Abre dos terminales desde la raíz del proyecto. La primera inicia la API en el puerto 5000:
 
 ```bash
 pnpm --filter @workspace/api-server run dev
 ```
 
+La segunda inicia la interfaz en el puerto 5173:
+
 ```bash
 pnpm --filter @workspace/veterinary-clinic run dev
 ```
 
-En Replit, inicia los workflows **API Server** y **Clínica Veterinaria** para abrir la vista previa conectada.
+Abre `http://localhost:5173` en el navegador. Fuera de Replit, Vite envía automáticamente las solicitudes `/api` al servidor Express en `http://127.0.0.1:5000`. Si la API usa otra dirección, configura `LOCAL_API_ORIGIN` al iniciar la interfaz.
+
+En Replit, inicia los workflows **API Server** y **Clínica Veterinaria** para abrir la vista previa conectada. Replit asigna sus propios puertos y enruta `/api`; el proxy local de Vite se habilita solamente fuera de Replit.
 
 Para comprobar los tipos:
 
@@ -80,7 +84,7 @@ No se insertan datos de demostración automáticamente. Los registros creados de
 
 ## API REST
 
-La API está disponible bajo el prefijo `/api`. En Replit, los ejemplos usan el proxy local del proyecto (`http://localhost:80`). Para una instancia del servidor ejecutada directamente en otra máquina, define `API_BASE` con el host y puerto que configuraste para Express.
+La API está disponible bajo el prefijo `/api`. Los ejemplos usan `http://localhost:5000/api` para ejecución local. En Replit, define `API_BASE=http://localhost:80/api` para usar el proxy del proyecto.
 
 ### Pacientes
 
@@ -114,7 +118,7 @@ La API está disponible bajo el prefijo `/api`. En Replit, los ejemplos usan el 
 Registrar un paciente:
 
 ```bash
-API_BASE="${API_BASE:-http://localhost:80/api}"
+API_BASE="${API_BASE:-http://localhost:5000/api}"
 
 curl -X POST "$API_BASE/patients" \
   -H 'Content-Type: application/json' \
