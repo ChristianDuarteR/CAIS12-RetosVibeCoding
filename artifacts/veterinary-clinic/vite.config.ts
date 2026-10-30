@@ -5,14 +5,7 @@ import { defineConfig } from 'vite';
 
 import runtimeErrorOverlay from '@replit/vite-plugin-runtime-error-modal';
 
-const isReplit = process.env.REPL_ID !== undefined;
-const rawPort = process.env.PORT ?? (isReplit ? undefined : '5173');
-
-if (!rawPort) {
-  throw new Error(
-    'PORT environment variable is required but was not provided.',
-  );
-}
+const rawPort = process.env.PORT ?? '5173';
 
 const port = Number(rawPort);
 
@@ -20,13 +13,8 @@ if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
-const basePath = process.env.BASE_PATH ?? (isReplit ? undefined : '/');
-
-if (!basePath) {
-  throw new Error(
-    'BASE_PATH environment variable is required but was not provided.',
-  );
-}
+const basePath = process.env.BASE_PATH ?? '/';
+const apiTarget = process.env.API_PROXY_TARGET ?? 'http://localhost:8080';
 
 export default defineConfig({
   base: basePath,
@@ -67,20 +55,15 @@ export default defineConfig({
   },
   server: {
     port,
-    strictPort: true,
+    strictPort: Boolean(process.env.PORT),
     host: '0.0.0.0',
     allowedHosts: true,
-    ...(isReplit
-      ? {}
-      : {
-          proxy: {
-            '/api': {
-              target:
-                process.env.LOCAL_API_ORIGIN ?? 'http://127.0.0.1:5000',
-              changeOrigin: true,
-            },
-          },
-        }),
+    proxy: {
+      '/api': {
+        target: apiTarget,
+        changeOrigin: true,
+      },
+    },
     fs: {
       strict: true,
     },
@@ -89,5 +72,11 @@ export default defineConfig({
     port,
     host: '0.0.0.0',
     allowedHosts: true,
+    proxy: {
+      '/api': {
+        target: apiTarget,
+        changeOrigin: true,
+      },
+    },
   },
 });
