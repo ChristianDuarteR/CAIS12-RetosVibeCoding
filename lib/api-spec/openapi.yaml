@@ -10,6 +10,12 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: patients
+    description: Patient records
+  - name: visits
+    description: Medical visits
+  - name: dashboard
+    description: Clinic overview
 paths:
   /healthz:
     get:
@@ -24,6 +30,220 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /dashboard:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get clinic dashboard summary
+      responses:
+        "200":
+          description: Dashboard totals and recent visits
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+  /patients:
+    get:
+      operationId: listPatients
+      tags: [patients]
+      summary: List and search patients
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Patient list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Patient"
+    post:
+      operationId: createPatient
+      tags: [patients]
+      summary: Register a patient
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatientInput"
+      responses:
+        "201":
+          description: Patient created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Patient"
+        "400":
+          description: Invalid patient data
+  /patients/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      operationId: getPatient
+      tags: [patients]
+      summary: Get a patient
+      responses:
+        "200":
+          description: Patient details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Patient"
+        "404":
+          description: Patient not found
+    put:
+      operationId: updatePatient
+      tags: [patients]
+      summary: Update a patient
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatientInput"
+      responses:
+        "200":
+          description: Updated patient
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Patient"
+        "400":
+          description: Invalid patient data
+        "404":
+          description: Patient not found
+    delete:
+      operationId: deletePatient
+      tags: [patients]
+      summary: Delete a patient and their visit history
+      responses:
+        "204":
+          description: Patient and linked visits deleted
+        "404":
+          description: Patient not found
+  /patients/{id}/visits:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      operationId: listPatientVisits
+      tags: [visits]
+      summary: List a patient's medical history
+      responses:
+        "200":
+          description: Visits ordered from newest to oldest
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Visit"
+        "404":
+          description: Patient not found
+  /visits:
+    get:
+      operationId: listVisits
+      tags: [visits]
+      summary: List medical visits
+      parameters:
+        - name: patientId
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Visit list ordered from newest to oldest
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Visit"
+    post:
+      operationId: createVisit
+      tags: [visits]
+      summary: Register a medical visit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VisitInput"
+      responses:
+        "201":
+          description: Visit created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Visit"
+        "400":
+          description: Invalid visit data
+        "404":
+          description: Patient not found
+  /visits/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      operationId: getVisit
+      tags: [visits]
+      summary: Get a medical visit
+      responses:
+        "200":
+          description: Visit details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Visit"
+        "404":
+          description: Visit not found
+    put:
+      operationId: updateVisit
+      tags: [visits]
+      summary: Update a medical visit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VisitInput"
+      responses:
+        "200":
+          description: Updated visit
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Visit"
+        "400":
+          description: Invalid visit data
+        "404":
+          description: Visit or patient not found
+    delete:
+      operationId: deleteVisit
+      tags: [visits]
+      summary: Delete a medical visit
+      responses:
+        "204":
+          description: Visit deleted
+        "404":
+          description: Visit not found
 components:
   schemas:
     HealthStatus:
@@ -33,4 +253,73 @@ components:
           type: string
       required:
         - status
+    Patient:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        species: { type: string }
+        breed: { type: string }
+        age: { type: integer, minimum: 0 }
+        sex: { type: string, enum: [female, male] }
+        ownerName: { type: string }
+        ownerPhone: { type: string }
+        createdAt: { type: string, format: date-time }
+      required: [id, name, species, breed, age, sex, ownerName, ownerPhone, createdAt]
+    PatientInput:
+      type: object
+      properties:
+        name: { type: string, minLength: 1 }
+        species: { type: string, minLength: 1 }
+        breed: { type: string }
+        age: { type: integer, minimum: 0 }
+        sex: { type: string, enum: [female, male] }
+        ownerName: { type: string, minLength: 1 }
+        ownerPhone: { type: string, minLength: 1 }
+      required: [name, species, breed, age, sex, ownerName, ownerPhone]
+    Visit:
+      type: object
+      properties:
+        id: { type: integer }
+        patientId: { type: integer }
+        patientName: { type: string }
+        patientSpecies: { type: string }
+        visitDate: { type: string, format: date }
+        reason: { type: string }
+        diagnosis: { type: string }
+        treatment: { type: string }
+        observations: { type: string }
+        createdAt: { type: string, format: date-time }
+      required: [id, patientId, patientName, patientSpecies, visitDate, reason, diagnosis, treatment, observations, createdAt]
+    VisitInput:
+      type: object
+      properties:
+        patientId: { type: integer, minimum: 1 }
+        visitDate: { type: string, format: date }
+        reason: { type: string, minLength: 1 }
+        diagnosis: { type: string }
+        treatment: { type: string }
+        observations: { type: string }
+      required: [patientId, visitDate, reason, diagnosis, treatment, observations]
+    RecentVisit:
+      type: object
+      properties:
+        id: { type: integer }
+        patientId: { type: integer }
+        patientName: { type: string }
+        patientSpecies: { type: string }
+        visitDate: { type: string, format: date }
+        reason: { type: string }
+      required: [id, patientId, patientName, patientSpecies, visitDate, reason]
+    DashboardSummary:
+      type: object
+      properties:
+        totalPatients: { type: integer }
+        totalVisits: { type: integer }
+        visitsToday: { type: integer }
+        recentVisits:
+          type: array
+          items:
+            $ref: "#/components/schemas/RecentVisit"
+      required: [totalPatients, totalVisits, visitsToday, recentVisits]
 

@@ -5,6 +5,9 @@ dist
 tmp
 out-tsc
 *.tsbuildinfo
+/artifacts/api-server/data/
+/artifacts/api-server/*.sqlite
+/artifacts/api-server/*.sqlite-*
 .expo
 .expo-shared
 .next
